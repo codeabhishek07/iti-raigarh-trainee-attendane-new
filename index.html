@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#123b83">
+  <title>ITI Raigarh Attendance | Attendance & Leave Portal</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    :root{--blue:#1754b8;--dark:#123b83;--navy:#142b50;--pale:#edf4ff;--bg:#f5f8fc;--line:#e4ebf4;--muted:#65758c;--green:#16865c;--red:#c73d48;--amber:#ad7418}
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:var(--bg);color:#223148;font:14px/1.5 Inter,"Segoe UI",system-ui,-apple-system,sans-serif}
+    button,input,select,textarea{font:inherit}
+    button{cursor:pointer}
+    button:disabled{cursor:not-allowed;opacity:.55}
+    a{color:var(--blue)}
+    svg{width:19px;height:19px;flex:none}
+    .hidden{display:none!important}
+    .app{min-height:100vh}
+    .auth-shell{min-height:100vh;display:grid;grid-template-columns:minmax(330px,43%) 1fr;background:#fff}
+    .auth-aside{background:linear-gradient(155deg,#102f69,#1754b8);padding:clamp(28px,5vw,76px);color:white;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}
+    .auth-aside:after{content:"";position:absolute;width:430px;height:430px;border:1px solid #ffffff24;border-radius:50%;right:-210px;bottom:-180px;box-shadow:0 0 0 75px #ffffff08,0 0 0 150px #ffffff06;pointer-events:none}
+    .brand{display:flex;align-items:center;gap:12px;font-weight:750;font-size:17px;letter-spacing:-.35px}
+    .brand-mark{width:42px;height:42px;border-radius:12px;background:#fff;color:var(--blue);display:grid;place-items:center;flex:none}
+    .brand-mark svg{width:24px;height:24px}
+    .auth-aside h1{font-size:clamp(31px,3.7vw,51px);line-height:1.13;letter-spacing:-1.9px;max-width:530px;margin:0 0 17px}
+    .auth-aside p{color:#d8e6ff;max-width:450px;font-size:15px;margin:0}
+    .auth-points{display:grid;gap:13px;margin-top:35px}
+    .auth-point{display:flex;align-items:center;gap:12px;color:#eaf2ff}
+    .auth-point span{width:35px;height:35px;border:1px solid #ffffff42;background:#ffffff16;border-radius:10px;display:grid;place-items:center}
+    .auth-footer{color:#bed4f7;font-size:12px;position:relative}
+    .auth-main{display:flex;justify-content:center;align-items:center;padding:35px 22px}
+    .auth-box{width:min(100%,425px)}
+    .eyebrow{color:var(--blue);text-transform:uppercase;letter-spacing:1.3px;font-size:11px;font-weight:800}
+    .auth-box h2{font-size:29px;letter-spacing:-1px;margin:8px 0 4px;color:var(--navy)}
+    .subtle{color:var(--muted);margin:0}
+    .auth-switch{display:flex;background:#f2f5fa;border-radius:11px;padding:4px;margin:28px 0 24px}
+    .auth-switch button{width:50%;border:0;background:transparent;color:var(--muted);padding:10px;border-radius:8px;font-weight:700}
+    .auth-switch button.active{background:white;color:var(--blue);box-shadow:0 2px 8px #1a365215}
+    .field{margin-bottom:15px}
+    .field label{display:block;font-size:12px;font-weight:750;color:#34465f;margin-bottom:6px}
+    .control{width:100%;height:43px;border:1px solid #d6e0ed;background:#fff;border-radius:9px;padding:0 12px;color:#223148;outline:none;transition:border-color .15s,box-shadow .15s}
+    textarea.control{height:auto;min-height:95px;padding:10px 12px;resize:vertical}
+    .control:focus{border-color:var(--blue);box-shadow:0 0 0 3px #1754b820}
+    .control:disabled{background:#f5f7fa}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+    .btn{border:1px solid transparent;min-height:39px;border-radius:9px;padding:8px 14px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap;background:#fff;color:#34465f;transition:background .15s,border-color .15s}
+    .btn svg{width:17px;height:17px}
+    .btn-primary{background:var(--blue);color:#fff}
+    .btn-primary:hover:not(:disabled){background:#103e90}
+    .btn-outline{border-color:#d7e3f2;color:var(--blue)}
+    .btn-outline:hover{background:var(--pale)}
+    .btn-danger{color:var(--red);border-color:#f2d5d8}
+    .btn-danger:hover{background:#fff3f4}
+    .btn-full{width:100%}
+    .btn-sm{min-height:31px;padding:5px 10px;font-size:12px}
+    .hint{font-size:12px;color:var(--muted)}
+    .demo-box{border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:22px;background:#f8fbff}
+    .demo-box strong{display:block;font-size:12px;color:var(--navy);margin-bottom:6px}
+    .demo-box p{margin:3px 0;color:#51627a;font-size:12px}
+    .notice{padding:11px 13px;border-radius:9px;background:#fff5e5;color:#865912;font-size:12px;line-height:1.5}
+    .layout{min-height:100vh;display:grid;grid-template-columns:246px minmax(0,1fr)}
+    .sidebar{background:#fff;border-right:1px solid var(--line);padding:24px 13px;display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+    .sidebar .brand{padding:0 10px;font-size:15px;color:var(--navy)}
+    .sidebar .brand-mark{background:var(--blue);color:white}
+    .side-label{font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:#8997aa;font-weight:800;margin:37px 12px 10px}
+    .nav-list{display:grid;gap:4px}
+    .nav-btn{border:0;background:transparent;text-align:left;padding:11px 12px;border-radius:9px;color:#566981;display:flex;align-items:center;gap:12px;font-weight:650;width:100%}
+    .nav-btn:hover{background:#f4f7fb}
+    .nav-btn.active{background:var(--pale);color:var(--blue)}
+    .nav-btn svg{width:18px;height:18px}
+    .nav-count{margin-left:auto;background:#e8f0ff;border-radius:99px;padding:0 7px;font-size:11px;color:var(--blue)}
+    .side-bottom{margin-top:auto;border-top:1px solid var(--line);padding:16px 6px 0}
+    .profile{display:flex;align-items:center;gap:9px;min-width:0}
+    .avatar{width:35px;height:35px;border-radius:10px;background:#e8f0ff;color:var(--blue);display:grid;place-items:center;font-weight:800;flex:none}
+    .profile span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .profile small{display:block;color:var(--muted);font-size:11px}
+    .workspace{min-width:0}
+    .topbar{height:70px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:15px;padding:0 clamp(16px,3vw,36px)}
+    .topbar-title{font-weight:750;color:var(--navy);font-size:15px}
+    .topbar-right{display:flex;align-items:center;gap:12px}
+    .topbar-date{color:var(--muted);font-size:12px}
+    .topbar .avatar{width:32px;height:32px}
+    .mobile-nav{display:none}
+    .content{max-width:1320px;margin:0 auto;padding:30px clamp(16px,3vw,36px) 60px}
+    .page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:15px;margin-bottom:23px}
+    .page-head h1{font-size:25px;letter-spacing:-.8px;color:var(--navy);margin:3px 0}
+    .page-head p{margin:0;color:var(--muted);font-size:13px}
+    .head-actions{display:flex;flex-wrap:wrap;gap:8px}
+    .card{background:white;border:1px solid var(--line);border-radius:13px;box-shadow:0 2px 10px #18365e08}
+    .card-pad{padding:20px}
+    .card-title{font-size:15px;color:var(--navy);font-weight:750;margin:0}
+    .card-sub{font-size:12px;color:var(--muted);margin:3px 0 0}
+    .card-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:17px}
+    .stack{display:grid;gap:18px}
+    .grid{display:grid;gap:16px}
+    .stats{grid-template-columns:repeat(4,minmax(0,1fr))}
+    .two-col{grid-template-columns:minmax(0,1.65fr) minmax(270px,1fr)}
+    .two-even{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .hero{background:linear-gradient(110deg,#123b83,#2461bc);border-radius:14px;color:white;padding:26px 30px;display:flex;align-items:center;justify-content:space-between;gap:15px;overflow:hidden}
+    .hero h2{margin:4px 0;font-size:23px;letter-spacing:-.6px}
+    .hero p{margin:0;color:#dbeaff;font-size:13px}
+    .hero .tag{display:inline-block;background:#ffffff23;border:1px solid #ffffff40;padding:6px 11px;border-radius:7px;font-size:12px;font-weight:700}
+    .stat{display:flex;align-items:center;gap:13px;min-height:96px}
+    .stat-icon{width:43px;height:43px;display:grid;place-items:center;border-radius:11px;flex:none}
+    .stat-icon.blue{background:#ecf3ff;color:var(--blue)}
+    .stat-icon.green{background:#e8f7f0;color:var(--green)}
+    .stat-icon.amber{background:#fff5e6;color:var(--amber)}
+    .stat-icon.red{background:#fff0f1;color:var(--red)}
+    .stat-number{font-size:23px;line-height:1.15;font-weight:800;color:var(--navy);letter-spacing:-.5px}
+    .stat-name{font-size:12px;color:var(--muted);margin-top:4px}
+    .mini-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+    .mini-stat{padding:15px;border:1px solid var(--line);border-radius:10px}
+    .mini-stat b{display:block;font-size:22px;color:var(--navy)}
+    .mini-stat span{font-size:11px;color:var(--muted)}
+    .chart-wrap{height:230px;position:relative}
+    .chart-wrap.short{height:190px}
+    .chart-wrap canvas{max-width:100%}
+    .table-wrap{overflow-x:auto}
+    table{border-collapse:collapse;width:100%;text-align:left}
+    th{color:#74849a;background:#f8fafd;font-size:10px;text-transform:uppercase;letter-spacing:.7px;font-weight:800;padding:12px 14px;white-space:nowrap;border-bottom:1px solid var(--line)}
+    td{padding:12px 14px;border-bottom:1px solid #edf1f6;font-size:12px;vertical-align:middle}
+    tbody tr:last-child td{border-bottom:0}
+    tbody tr:hover{background:#fbfdff}
+    .cell-main{font-weight:750;color:var(--navy)}
+    .cell-sub{font-size:11px;color:var(--muted);margin-top:1px}
+    .badge{display:inline-flex;align-items:center;gap:5px;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:750;white-space:nowrap}
+    .badge.green{background:#e8f7f0;color:#13754f}
+    .badge.red{background:#fff0f1;color:#b83440}
+    .badge.amber{background:#fff5e5;color:#976415}
+    .badge.blue{background:#eaf2ff;color:#2057a5}
+    .badge.gray{background:#f0f3f7;color:#69798c}
+    .dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+    .progress{height:7px;background:#edf1f7;border-radius:20px;overflow:hidden;margin-top:7px}
+    .progress>span{display:block;height:100%;border-radius:20px;background:var(--blue)}
+    .progress>span.low{background:var(--red)}
+    .row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .list-item{padding:12px 0;border-bottom:1px solid var(--line)}
+    .list-item:last-child{border:0;padding-bottom:0}
+    .empty{padding:35px 18px;text-align:center;color:var(--muted);font-size:13px}
+    .filters{display:flex;flex-wrap:wrap;align-items:end;gap:11px}
+    .filters .field{margin:0}
+    .filters .control{min-width:150px}
+    .search{max-width:270px}
+    .action-group{display:flex;gap:5px;flex-wrap:wrap}
+    .callout{background:#f0f6ff;border:1px solid #dce9fc;border-radius:10px;padding:14px 16px;color:#375785;font-size:12px}
+    .callout strong{color:#164588}
+    .leave-card{padding:16px}
+    .leave-card+.leave-card{margin-top:11px}
+    .leave-balance{margin:12px 0 17px}
+    .choice-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+    .choice{display:block;cursor:pointer}
+    .choice input{position:absolute;opacity:0;width:1px;height:1px}
+    .choice-body{border:1px solid #dbe4f0;border-radius:9px;padding:13px 10px;text-align:center;color:#435670;font-weight:700}
+    .choice-body small{display:block;color:var(--muted);font-size:11px;font-weight:400}
+    .choice input:checked+.choice-body{border-color:var(--blue);background:var(--pale);color:var(--blue)}
+    .choice input:focus-visible+.choice-body{outline:3px solid #9fc1ff}
+    .modal-backdrop{position:fixed;inset:0;background:#14233c8c;z-index:50;display:grid;place-items:center;padding:18px}
+    .modal{background:#fff;border-radius:14px;width:min(100%,550px);max-height:90vh;overflow-y:auto;box-shadow:0 25px 70px #0f254750}
+    .modal.large{width:min(100%,750px)}
+    .modal-head{padding:19px 22px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}
+    .modal-head h2{font-size:17px;color:var(--navy);margin:0}
+    .modal-body{padding:20px 22px}
+    .modal-foot{display:flex;justify-content:flex-end;gap:8px;margin-top:17px}
+    .icon-btn{background:transparent;border:0;color:#708097;padding:5px;border-radius:7px;display:inline-grid;place-items:center}
+    .icon-btn:hover{background:#f0f4fa}
+    .toast-area{position:fixed;bottom:20px;right:20px;z-index:100;display:grid;gap:8px}
+    .toast{max-width:min(360px,calc(100vw - 32px));background:#18385f;color:#fff;padding:12px 16px;border-radius:9px;box-shadow:0 10px 30px #132a4740;font-size:13px}
+    .toast.error{background:#a93842}
+    .footnote{font-size:11px;color:#8694a5;margin-top:22px}
+    @media(max-width:1050px){.stats{grid-template-columns:repeat(2,1fr)}.two-col{grid-template-columns:1fr}}
+    @media(max-width:780px){
+      .auth-shell{grid-template-columns:1fr}
+      .auth-aside{min-height:185px;padding:24px;gap:22px}
+      .auth-aside h1{font-size:24px;letter-spacing:-.7px}
+      .auth-aside p{font-size:12px}
+      .auth-aside .auth-points,.auth-footer{display:none}
+      .auth-main{align-items:flex-start;padding:27px 20px 45px}
+      .layout{display:block}
+      .sidebar{display:none}
+      .topbar{height:63px;padding:0 17px}
+      .topbar-date{display:none}
+      .mobile-nav{display:flex;gap:3px;background:#fff;border-bottom:1px solid var(--line);overflow-x:auto;padding:7px 12px;scrollbar-width:none;position:sticky;top:0;z-index:10}
+      .mobile-nav::-webkit-scrollbar{display:none}
+      .mobile-nav .nav-btn{width:auto;flex:none;padding:8px 10px;gap:6px;font-size:12px}
+      .mobile-nav .nav-btn svg{width:15px;height:15px}
+      .content{padding:22px 16px 50px}
+      .page-head{align-items:flex-start}
+      .page-head h1{font-size:22px}
+    }
+    @media(max-width:580px){
+      .stats{gap:9px}
+      .stat{min-height:85px;padding:13px;gap:9px}
+      .stat-icon{width:35px;height:35px}
+      .stat-icon svg{width:17px;height:17px}
+      .stat-number{font-size:19px}
+      .stat-name{font-size:11px}
+      .hero{padding:20px;align-items:flex-start;flex-direction:column}
+      .hero h2{font-size:20px}
+      .two-even{grid-template-columns:1fr}
+      .page-head{flex-direction:column}
+      .card-pad{padding:16px}
+      .form-grid{grid-template-columns:1fr}
+      .mini-stats{gap:5px}
+      .mini-stat{padding:10px}
+      .mini-stat b{font-size:18px}
+      .choice-body{padding:11px 5px;font-size:12px}
+      .choice-body small{font-size:10px}
+      .filters .field{flex:1;min-width:135px}
+      .filters .control{min-width:0}
+    }
+    @media print{.sidebar,.mobile-nav,.topbar,.head-actions,.btn,.footnote{display:none!important}.layout{display:block}.content{max-width:none}.card{break-inside:avoid;box-shadow:none}}
+  </style>
+</head>
+<body>
+<div id="app" class="app"></div>
+<div id="modal-root"></div>
+<div id="toast-root" class="toast-area" aria-live="polite"></div>
+
+<script>
+"use strict";
+
+/* Browser-local demonstration storage. Deploy with a server-side database,
+   verified officer registration, HTTPS, and server-enforced authorization
+   before using this portal for real institutional records. */
+const KEY="iti_raigarh_portal_v3";
+const SESSION="iti_raigarh_session_v3";
+const $=(q,root=document)=>root.querySelector(q);
+const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const id=()=>crypto.randomUUID ? crypto.randomUUID() : "id_"+Date.now()+"_"+Math.random().toString(36).slice(2);
+const localDate=d=>{const x=new Date(d);return x.getFullYear()+"-"+String(x.getMonth()+1).padStart(2,"0")+"-"+String(x.getDate()).padStart(2,"0")};
+const today=()=>localDate(new Date());
+const dateObj=s=>new Date(s+"T12:00:00");
+const displayDate=s=>s?dateObj(String(s).slice(0,10)).toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"}):"—";
+const monthLabel=s=>dateObj(s+"-01").toLocaleDateString("en-IN",{month:"long",year:"numeric"});
+const initials=s=>String(s||"?").trim().split(/\s+/).slice(0,2).map(x=>x[0]).join("").toUpperCase();
+const iconPaths={
+  logo:'<path d="m2 9 10-5 10 5-10 5-10-5Z"/><path d="M6 11v6c3 3 9 3 12 0v-6M22 9v7"/>',
+  home:'<path d="m3 10 9-7 9 7v10H3V10Z"/><path d="M9 20v-7h6v7"/>',
+  calendar:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4m10-4v4M3 10h18"/>',
+  users:'<circle cx="9" cy="8" r="3"/><path d="M3 20v-2a6 6 0 0 1 12 0v2H3Zm14-15a3 3 0 0 1 0 6m1 4a5 5 0 0 1 3 5h-3"/>',
+  check:'<path d="m4 12 5 5L20 6"/>',
+  file:'<path d="M6 3h9l4 4v14H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path d="M15 3v5h5M8 13h8m-8 4h8"/>',
+  bell:'<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9ZM10 21h4"/>',
+  alert:'<path d="m12 3 10 18H2L12 3Z"/><path d="M12 9v5m0 3h.01"/>',
+  chart:'<path d="M3 3v18h18M7 15l4-4 3 2 5-7"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  arrow:'<path d="M5 12h14m-6-6 6 6-6 6"/>',
+  download:'<path d="M12 3v12m-4-4 4 4 4-4M4 17v4h16v-4"/>',
+  logout:'<path d="M9 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h4m7-4 5-5-5-5m5 5H9"/>',
+  settings:'<circle cx="12" cy="12" r="3"/><path d="m19 12 2-1-2-4-2 1-2-1-.5-2h-5L9 7 7 8 5 7l-2 4 2 1-1 2 1 2-2 1 2 4 2-1 2 1 .5 2h5l.5-2 2-1 2 1 2-4-2-1 1-2-1-2Z"/>',
+  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l4 2"/>',
+  pin:'<path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2"/>',
+  edit:'<path d="M12 5H5v14h14v-7M10 14l-1 3 3-1 9-9-2-2-9 9Z"/>',
+  close:'<path d="M5 5 19 19M19 5 5 19"/>'
+};
+const I=n=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${iconPaths[n]||iconPaths.file}</svg>`;
+const store={
+  get(){try{return JSON.parse(localStorage.getItem(KEY))}catch{return null}},
+  save(data){localStorage.setItem(KEY,JSON.stringify(data))}
+};
+let db=null,me=null,charts=[];
+const ui={auth:"login",role:"trainee",section:"dashboard",date:today(),month:today().slice(0,7),search:"",reportFrom:localDate(new Date(Date.now()-29*86400000)),reportTo:today(),modal:null};
+
+function flash(message,error=false){
+  const el=document.createElement("div");el.className="toast"+(error?" error":"");el.textContent=message;
+  $("#toast-root").append(el);setTimeout(()=>el.remove(),3700);
+}
+function trade(id){return db.trades.find(t=>t.id===id)}
+function user(id){return db.users.find(u=>u.id===id)}
+function ownTrainees(){return db.users.filter(u=>u.role==="trainee"&&u.tradeId===me.tradeId)}
+function ownLeaves(){const ids=new Set(ownTrainees().map(u=>u.id));return db.leaves.filter(l=>ids.has(l.traineeId))}
+function ownAttendance(){const ids=new Set(ownTrainees().map(u=>u.id));return db.attendance.filter(a=>ids.has(a.traineeId))}
+function records(tid){return db.attendance.filter(a=>a.traineeId===tid)}
+function notices(tid){return db.notifications.filter(n=>n.userId===tid).sort((a,b)=>b.createdAt-a.createdAt)}
+function notify(tid,text,type="blue"){db.notifications.push({id:id(),userId:tid,text,type,createdAt:Date.now(),read:false})}
+function save(){store.save(db)}
+function isOfficer(){return me&&me.role==="admin"}
+function pct(tid){
+  const t=user(tid);if(!t)return 0;
+  const recs=records(tid);
+  const start=dateObj(t.joinedDate||today()),end=dateObj(today());
+  if(new Date().getHours()<12)end.setDate(end.getDate()-1);
+  let scheduled=0;
+  for(let d=new Date(start),i=0;d<=end&&i<3650;d.setDate(d.getDate()+1),i++)if(d.getDay()!==0)scheduled++;
+  const total=Math.max(scheduled,recs.length);
+  if(!total)return 0;
+  const credited=recs.reduce((n,r)=>n+(r.status==="present"?1:r.status==="half-day"?.5:0),0);
+  return Math.min(100,Math.round(credited/total*100));
+}
+function balance(tid,type,includePending=false){
+  const max=type==="Casual"?12:36;
+  const used=db.leaves.filter(l=>l.traineeId===tid&&l.type===type&&(l.status==="approved"||(includePending&&l.status==="pending"))).reduce((s,l)=>s+l.days,0);
+  return {used,max,left:Math.max(0,max-used)};
+}
+function badge(text,tone="gray"){return `<span class="badge ${tone}"><span class="dot"></span>${esc(text)}</span>`}
+function statusBadge(status){return badge(status==="half-day"?"Half day":status==="not-marked"?"Not marked":status[0].toUpperCase()+status.slice(1),({present:"green",approved:"green",active:"green",pending:"amber","half-day":"amber",absent:"red",rejected:"red",inactive:"gray","not-marked":"gray"})[status]||"gray")}
+function pageHead(title,description,action=""){return `<div class="page-head"><div><span class="eyebrow">Government ITI Raigarh</span><h1>${esc(title)}</h1><p>${esc(description)}</p></div>${action?`<div class="head-actions">${action}</div>`:""}</div>`}
+function stat(label,value,icon,tone="blue"){return `<div class="card card-pad stat"><div class="stat-icon ${tone}">${I(icon)}</div><div><div class="stat-number">${esc(value)}</div><div class="stat-name">${esc(label)}</div></div></div>`}
+function empty(text){return `<div class="empty">${esc(text)}</div>`}
+function table(headers,rows){return `<div class="table-wrap"><table><thead><tr>${headers.map(h=>`<th>${esc(h)}</th>`).join("")}</tr></thead><tbody>${rows.length?rows.join(""):`<tr><td colspan="${headers.length}">${empty("No records to display.")}</td></tr>`}</tbody></table></div>`}
+function row(cells){return `<tr>${cells.map(c=>`<td>${c}</td>`).join("")}</tr>`}
+function field(label,name,value="",type="text",required=false,extra=""){return `<div class="field"><label for="f-${esc(name)}">${esc(label)}${required?" *":""}</label><input class="control" id="f-${esc(name)}" name="${esc(name)}" type="${type}" value="${esc(value)}" ${required?"required":""} ${extra}></div>`}
+function selectField(label,name,options,selected="",required=true){return `<div class="field"><label for="f-${esc(name)}">${esc(label)}${required?" *":""}</label><select class="control" id="f-${esc(name)}" name="${esc(name)}" ${required?"required":""}><option value="">Choose an option</option>${options.map(o=>`<option value="${esc(o.value)}" ${o.value===selected?"selected":""}>${esc(o.label)}</option>`).join("")}</select></div>`}
+function tradeOptions(){return db.trades.map(t=>({value:t.id,label:t.name+" ("+t.code+")"}))}
+
+async function hashPassword(password,salt){
+  if(!crypto.subtle)throw Error("Secure password hashing requires HTTPS or localhost.");
+  const key=await crypto.subtle.importKey("raw",new TextEncoder().encode(password),"PBKDF2",false,["deriveBits"]);
+  const bytes=await crypto.subtle.deriveBits({name:"PBKDF2",salt:Uint8Array.from(atob(salt),c=>c.charCodeAt(0)),iterations:120000,hash:"SHA-256"},key,256);
+  return Array.from(new Uint8Array(bytes)).map(b=>b.toString(16).padStart(2,"0")).join("");
+}
+async function credentials(password){const bytes=crypto.getRandomValues(new Uint8Array(16));const salt=btoa(String.fromCharCode(...bytes));return {salt,passwordHash:await hashPassword(password,salt)}}
+async function seed(){
+  const existing=store.get();if(existing&&Array.isArray(existing.users)){db=existing;return}
+  db={trades:[{id:"el",name:"Electrician",code:"EL"},{id:"ft",name:"Fitter",code:"FT"},{id:"mv",name:"Mechanic (Motor Vehicle)",code:"MV"}],users:[],attendance:[],leaves:[],warnings:[],notifications:[]};
+  const demo=[
+    ["off-el","admin","admin","admin123","R.K. Sharma","el","",true],
+    ["off-ft","admin","fitter","fitter123","S.K. Verma","ft","",true],
+    ["off-mv","admin","motor","motor123","A.K. Singh","mv","",true],
+    ["tr-1","trainee","trainee","trainee123","Aman Kumar","el","2024-EL-001",true],
+    ["tr-2","trainee","rahul","rahul123","Rahul Patel","el","2024-EL-002",true],
+    ["tr-3","trainee","priya","priya123","Priya Sahu","el","2024-EL-003",true],
+    ["tr-4","trainee","neha","neha123","Neha Gupta","el","2024-EL-004",true],
+    ["tr-5","trainee","rohit","rohit123","Rohit Sahu","ft","2024-FT-001",true]
+  ];
+  const joined=localDate(new Date(Date.now()-29*86400000));
+  for(const [uid,role,username,password,name,tradeId,rollNo,active] of demo)db.users.push({id:uid,role,username:username.toLowerCase(),...(await credentials(password)),name,tradeId,rollNo,active,joinedDate:joined,mobile:"",fatherName:""});
+  for(const [index,tid] of ["tr-1","tr-2","tr-3","tr-4","tr-5"].entries()){
+    for(let i=29;i>=1;i--){
+      const d=new Date();d.setDate(d.getDate()-i);
+      if(d.getDay()===0)continue;
+      const status=(i+index*3)%11===0?"absent":(index===2&&i%8===0?"half-day":"present");
+      db.attendance.push({id:id(),traineeId:tid,date:localDate(d),status,location:["Classroom","Workshop","Lab"][i%3],time:"09:12",createdAt:d.getTime()});
+    }
+  }
+  db.leaves=[
+    {id:id(),traineeId:"tr-1",type:"Casual",fromDate:joined,toDate:joined,days:1,reason:"Family commitment",status:"approved",appliedAt:Date.now()-86400000*10,reviewedBy:"off-el"},
+    {id:id(),traineeId:"tr-2",type:"Medical",fromDate:localDate(new Date(Date.now()+2*86400000)),toDate:localDate(new Date(Date.now()+3*86400000)),days:2,reason:"Medical appointment and recovery",status:"pending",appliedAt:Date.now()-86400000,reviewedBy:null}
+  ];
+  notify("tr-1","Welcome to ITI Raigarh Attendance. Your account is ready.","blue");
+  save();
+}
+
+function authView(){
+  const signup=ui.auth==="signup",officer=ui.role==="admin";
+  return `<div class="auth-shell">
+    <aside class="auth-aside">
+      <div class="brand"><span class="brand-mark">${I("logo")}</span><span>ITI Raigarh Attendance</span></div>
+      <div><h1>Attendance made simple for every training day.</h1><p>A clear, convenient way for trainees and training officers to manage attendance, leave and reports.</p>
+        <div class="auth-points"><div class="auth-point"><span>${I("check")}</span> Daily attendance at a glance</div><div class="auth-point"><span>${I("calendar")}</span> Easy leave applications and approvals</div><div class="auth-point"><span>${I("chart")}</span> Useful records and downloadable reports</div></div>
+      </div>
+      <div class="auth-footer">Government ITI Raigarh · Chhattisgarh</div>
+    </aside>
+    <main class="auth-main"><div class="auth-box">
+      <span class="eyebrow">Official portal</span><h2>${signup?"Create your account":"Welcome back"}</h2>
+      <p class="subtle">${signup?"Choose your role and enter your details to get started.":"Sign in to manage your attendance and leave."}</p>
+      <div class="auth-switch" role="tablist" aria-label="Account access">
+        <button type="button" role="tab" aria-selected="${!signup}" class="${!signup?"active":""}" onclick="setAuth('login')">Sign in</button>
+        <button type="button" role="tab" aria-selected="${signup}" class="${signup?"active":""}" onclick="setAuth('signup')">Create account</button>
+      </div>
+      ${signup?`<form id="signup-form">
+        ${selectField("Account type","role",[{value:"trainee",label:"Trainee"},{value:"admin",label:"Training Officer (Admin)"}],ui.role)}
+        ${field("Full name","name","","text",true,'maxlength="80" autocomplete="name"')}
+        ${selectField("Select Trade","tradeId",tradeOptions())}
+        ${officer?`<div class="callout" style="margin:-3px 0 15px">Training Officer accounts have admin access <strong>only to the selected trade</strong>. In a live deployment, officer identity must be verified by the institution before access is granted.</div>`:field("Roll number","rollNo","","text",true,'maxlength="35"')}
+        <div class="form-grid">${field("Username","username","","text",true,'minlength="3" maxlength="30" autocomplete="username"')}${field("Mobile number","mobile","","tel",false,'inputmode="numeric" pattern="[0-9]{10}" title="Enter a 10-digit mobile number"')}</div>
+        <div class="form-grid">${field("Password","password","","password",true,'minlength="8" autocomplete="new-password"')}${field("Confirm password","confirm","","password",true,'minlength="8" autocomplete="new-password"')}</div>
+        <button class="btn btn-primary btn-full" type="submit">Create account ${I("arrow")}</button>
+      </form>`:`<form id="login-form">
+        ${field("Username","username","","text",true,'autocomplete="username" autofocus')}
+        ${field("Password","password","","password",true,'autocomplete="current-password"')}
+        <button class="btn btn-primary btn-full" type="submit">Sign in ${I("arrow")}</button>
+      </form>
+      <div class="demo-box"><strong>Explore the demo</strong><p>Training Officer: <b>admin</b> / <b>admin123</b></p><p>Trainee: <b>trainee</b> / <b>trainee123</b></p></div>`}
+      <p class="footnote">Demo data is stored in this browser. A verified server and database are required for production use.</p>
+    </div></main>
+  </div>`;
+}
+function setAuth(mode){ui.auth=mode;render()}
+function setRole(role){ui.role=role;render()}
+async function handleLogin(form){
+  const data=new FormData(form),username=String(data.get("username")||"").trim().toLowerCase(),password=String(data.get("password")||"");
+  const account=db.users.find(u=>u.username===username);
+  if(!account||!account.active){flash("Invalid credentials or inactive account.",true);return}
+  try{
+    if(await hashPassword(password,account.salt)!==account.passwordHash){flash("Invalid credentials or inactive account.",true);return}
+    me=account;sessionStorage.setItem(SESSION,account.id);ui.section="dashboard";render();flash("Welcome, "+account.name.split(" ")[0]+".");
+  }catch(e){flash(e.message,true)}
+}
+async function handleSignup(form){
+  const f=new FormData(form),role=String(f.get("role")),tradeId=String(f.get("tradeId")),name=String(f.get("name")||"").trim(),username=String(f.get("username")||"").trim().toLowerCase(),password=String(f.get("password")||""),confirm=String(f.get("confirm")||""),rollNo=String(f.get("rollNo")||"").trim(),mobile=String(f.get("mobile")||"").trim();
+  if(!["admin","trainee"].includes(role)||!trade(tradeId)||name.length<2||!/^[a-z0-9._-]{3,30}$/.test(username)){flash("Check your name, username and selected trade.",true);return}
+  if(db.users.some(u=>u.username===username)){flash("That username is already in use.",true);return}
+  if(role==="trainee"&&(!rollNo||db.users.some(u=>u.role==="trainee"&&u.tradeId===tradeId&&u.rollNo.toLowerCase()===rollNo.toLowerCase()))){flash("Enter a unique roll number for this trade.",true);return}
+  if(mobile&&!/^\d{10}$/.test(mobile)){flash("Enter a valid 10-digit mobile number.",true);return}
+  if(password.length<8||password!==confirm){flash("Use at least 8 characters and match both passwords.",true);return}
+  try{
+    const account={id:id(),role,name,username,...await credentials(password),tradeId,rollNo:role==="trainee"?rollNo:"",mobile,active:true,joinedDate:today(),fatherName:""};
+    db.users.push(account);notify(account.id,"Welcome to ITI Raigarh Attendance.","blue");save();
+    me=account;sessionStorage.setItem(SESSION,account.id);ui.section="dashboard";render();flash("Account created successfully.");
+  }catch(e){flash(e.message,true)}
+}
+function logout(){me=null;sessionStorage.removeItem(SESSION);ui.auth="login";ui.modal=null;render()}
+
+const adminNav=[["dashboard","Overview","home"],["attendance","Attendance","calendar"],["trainees","Trainees","users"],["leaves","Leave requests","file"],["warnings","Warnings","alert"],["reports","Reports","chart"],["trade","My trade","settings"]];
+const traineeNav=[["dashboard","Overview","home"],["mark","Mark attendance","check"],["apply","Apply for leave","plus"],["leaves","My leaves","file"],["records","My attendance","calendar"],["alerts","Notifications","bell"]];
+function navButtons(mobile=false){
+  return (isOfficer()?adminNav:traineeNav).map(([key,label,ic])=>{
+    const count=key==="alerts"?notices(me.id).filter(n=>!n.read).length:key==="leaves"&&isOfficer()?ownLeaves().filter(l=>l.status==="pending").length:0;
+    return `<button type="button" class="nav-btn ${ui.section===key?"active":""}" ${ui.section===key?'aria-current="page"':""} onclick="go('${key}')">${I(ic)}<span>${label}</span>${count?`<span class="nav-count">${count}</span>`:""}</button>`;
+  }).join("");
+}
+function shell(content){
+  const t=trade(me.tradeId),label=(isOfficer()?"Training Officer":"Trainee")+" · "+(t?t.name:"Trade");
+  return `<div class="layout">
+    <aside class="sidebar"><div class="brand"><span class="brand-mark">${I("logo")}</span><span>ITI Raigarh<br>Attendance</span></div>
+      <div class="side-label">Workspace</div><nav class="nav-list" aria-label="Main navigation">${navButtons()}</nav>
+      <div class="side-bottom"><div class="profile"><div class="avatar">${esc(initials(me.name))}</div><div style="min-width:0"><span><strong>${esc(me.name)}</strong></span><small>${esc(label)}</small></div></div>
+        <button class="nav-btn" style="margin-top:12px" onclick="logout()">${I("logout")} Sign out</button>
+      </div>
+    </aside>
+    <div class="workspace"><header class="topbar"><div><div class="topbar-title">ITI Raigarh Attendance</div><div class="hint">${esc(label)}</div></div><div class="topbar-right"><span class="topbar-date">${esc(displayDate(today()))}</span><span class="avatar" title="${esc(me.name)}">${esc(initials(me.name))}</span><button class="icon-btn" onclick="logout()" aria-label="Sign out" title="Sign out">${I("logout")}</button></div></header>
+      <nav class="mobile-nav" aria-label="Mobile navigation">${navButtons(true)}</nav>
+      <main class="content">${content}<p class="footnote">Government ITI Raigarh, Chhattisgarh · Browser-local demonstration portal. Production use requires a secure institutional backend.</p></main>
+    </div>
+  </div>`;
+}
+function go(section){ui.section=section;ui.modal=null;window.scrollTo(0,0);render()}
+
+/* Training Officer views */
+function adminDashboard(){
+  const trainees=ownTrainees(),daily=ownAttendance().filter(a=>a.date===today()),present=daily.filter(a=>a.status==="present").length,pending=ownLeaves().filter(l=>l.status==="pending").length,avg=trainees.length?Math.round(trainees.reduce((s,t)=>s+pct(t.id),0)/trainees.length):0;
+  const recent=ownLeaves().filter(l=>l.status==="pending").sort((a,b)=>b.appliedAt-a.appliedAt).slice(0,4);
+  const low=trainees.filter(t=>pct(t.id)<75&&records(t.id).length);
+  return `<div class="stack">
+    <div class="hero"><div><span class="tag">${esc(trade(me.tradeId)?.name||"Trade")} · Officer workspace</span><h2>Welcome back, ${esc(me.name.split(" ")[0])}</h2><p>Here is your trade's activity for ${esc(displayDate(today()))}.</p></div>${I("chart")}</div>
+    <div class="grid stats">${stat("Trainees",trainees.length,"users")}${stat("Present today",present,"check","green")}${stat("Pending leaves",pending,"file","amber")}${stat("Average attendance",avg+"%","chart")}</div>
+    <div class="grid two-col">
+      <div class="card card-pad"><div class="card-heading"><div><h3 class="card-title">Attendance this week</h3><p class="card-sub">Present trainees by day</p></div><button class="btn btn-outline btn-sm" onclick="go('attendance')">View register</button></div><div class="chart-wrap"><canvas id="admin-trend"></canvas></div></div>
+      <div class="card card-pad"><div class="card-heading"><div><h3 class="card-title">Today's register</h3><p class="card-sub">${esc(displayDate(today()))}</p></div></div>
+        <div class="mini-stats"><div class="mini-stat"><b style="color:var(--green)">${present}</b><span>Present</span></div><div class="mini-stat"><b style="color:var(--amber)">${daily.filter(a=>a.status==="half-day").length}</b><span>Half day</span></div><div class="mini-stat"><b style="color:var(--red)">${Math.max(0,trainees.length-daily.length)+daily.filter(a=>a.status==="absent").length}</b><span>Absent / unmarked</span></div></div>
+        <div class="callout" style="margin-top:18px"><strong>${low.length} trainee${low.length===1?"":"s"}</strong> currently below 75% attendance. <a href="#" onclick="event.preventDefault();go('warnings')">Review warnings</a></div>
+      </div>
+    </div>
+    <div class="card card-pad"><div class="card-heading"><div><h3 class="card-title">Leave requests awaiting review</h3><p class="card-sub">Recent applications from your trade</p></div><button class="btn btn-outline btn-sm" onclick="go('leaves')">View all</button></div>
+      ${recent.length?recent.map(l=>`<div class="list-item row"><div><div class="cell-main">${esc(user(l.traineeId)?.name||"Trainee")}</div><div class="cell-sub">${esc(l.type)} · ${esc(displayDate(l.fromDate))} · ${l.days} day${l.days===1?"":"s"}</div></div>${statusBadge("pending")}</div>`).join(""):empty("All caught up. No leave requests are waiting.")}</div>
+  </div>`;
+}
+function adminAttendance(){
+  const trainees=ownTrainees(),dayRecords=ownAttendance().filter(a=>a.date===ui.date),map=new Map(dayRecords.map(a=>[a.traineeId,a]));
+  const rows=trainees.map(t=>{const a=map.get(t.id);return row([
+    `<span class="cell-main">${esc(t.name)}</span><div class="cell-sub">${esc(t.rollNo)}</div>`,
+    a?statusBadge(a.status):statusBadge("not-marked"),
+    esc(a?.location||"—"),esc(a?.time||"—"),
+    `<button class="btn btn-outline btn-sm" onclick="showTrainee('${esc(t.id)}')">View records</button>`
+  ])});
+  return `${pageHead("Attendance register","View daily records and the monthly attendance trend.",`<button class="btn btn-outline" onclick="downloadReport('daily','pdf')">${I("download")} Download PDF</button>`)}
+    <div class="stack">
+      <div class="card card-pad"><div class="filters"><div class="field"><label for="day-filter">Select date</label><input class="control" id="day-filter" type="date" value="${esc(ui.date)}" max="${today()}" onchange="ui.date=this.value;render()"></div>
+        <div class="field"><label for="month-filter">Chart month</label><input class="control" id="month-filter" type="month" value="${esc(ui.month)}" onchange="ui.month=this.value;render()"></div></div></div>
+      <div class="grid stats">${stat("Trainees",trainees.length,"users")}${stat("Present",dayRecords.filter(a=>a.status==="present").length,"check","green")}${stat("Half day",dayRecords.filter(a=>a.status==="half-day").length,"clock","amber")}${stat("Absent / unmarked",trainees.length-dayRecords.filter(a=>a.status==="present"||a.status==="half-day").length,"alert","red")}</div>
+      <div class="card"><div class="card-pad"><h3 class="card-title">Daily attendance · ${esc(displayDate(ui.date))}</h3></div>${table(["Trainee","Status","Location","Time",""],rows)}</div>
+      <div class="card card-pad"><div class="card-heading"><div><h3 class="card-title">Monthly attendance</h3><p class="card-sub">${esc(monthLabel(ui.month))} · present records by day</p></div></div><div class="chart-wrap"><canvas id="admin-month"></canvas></div></div>
+    </div>`;
+}
+function adminTrainees(){
+  const list=ownTrainees().filter(t=>(t.name+" "+t.rollNo+" "+t.username).toLowerCase().includes(ui.search.toLowerCase()));
+  const rows=list.map(t=>row([
+    `<span class="cell-main">${esc(t.name)}</span><div class="cell-sub">${esc(t.rollNo)}</div>`,
+    esc(t.username),esc(t.mobile||"—"),
+    `<b style="color:${pct(t.id)<75?"var(--red)":"var(--green)"}">${pct(t.id)}%</b><div class="progress"><span class="${pct(t.id)<75?"low":""}" style="width:${pct(t.id)}%"></span></div>`,
+    statusBadge(t.active?"active":"inactive"),
+    `<div class="action-group"><button class="btn btn-outline btn-sm" onclick="showTrainee('${esc(t.id)}')">View</button><button class="btn btn-outline btn-sm" onclick="openTrainee('${esc(t.id)}')">Edit</button><button class="btn btn-sm ${t.active?"btn-danger":"btn-outline"}" onclick="toggleTrainee('${esc(t.id)}')">${t.active?"Deactivate":"Activate"}</button></div>`
+  ]));
+  return `${pageHead("Trainee accounts","Manage trainees assigned to your trade.",`<button class="btn btn-primary" onclick="openTrainee()">${I("plus")} Add trainee</button>`)}
+    <div class="card"><div class="card-pad row"><div><h3 class="card-title">${ownTrainees().length} trainees</h3><p class="card-sub">${esc(trade(me.tradeId)?.name||"")} trade only</p></div><input class="control search" type="search" aria-label="Search trainees" placeholder="Search name or roll no." value="${esc(ui.search)}" oninput="ui.search=this.value;filterTraineeRows()" id="trainee-search"></div><div id="trainee-table">${table(["Trainee","Username","Mobile","Attendance","Status","Actions"],rows)}</div></div>`;
+}
+function filterTraineeRows(){
+  const term=ui.search.toLowerCase();
+  const rows=Array.from($("#trainee-table").querySelectorAll("tbody tr"));
+  rows.forEach(r=>r.style.display=r.textContent.toLowerCase().includes(term)?"":"none");
+}
+function adminLeaves(){
+  const list=ownLeaves().sort((a,b)=>b.appliedAt-a.appliedAt),pending=list.filter(l=>l.status==="pending").length;
+  const rows=list.map(l=>row([
+    `<span class="cell-main">${esc(user(l.traineeId)?.name||"—")}</span><div class="cell-sub">${esc(user(l.traineeId)?.rollNo||"")}</div>`,
+    esc(l.type),`${esc(displayDate(l.fromDate))}<div class="cell-sub">to ${esc(displayDate(l.toDate))}</div>`,
+    esc(l.days),`<span title="${esc(l.reason)}">${esc(l.reason)}</span>`,statusBadge(l.status),
+    l.status==="pending"?`<div class="action-group"><button class="btn btn-primary btn-sm" onclick="reviewLeave('${esc(l.id)}','approved')">Approve</button><button class="btn btn-danger btn-sm" onclick="reviewLeave('${esc(l.id)}','rejected')">Reject</button></div>`:"—"
+  ]));
+  return `${pageHead("Leave requests","Review applications submitted by trainees in your trade.")}<div class="stack">
+    <div class="grid stats">${stat("Total requests",list.length,"file")}${stat("Pending",pending,"clock","amber")}${stat("Approved",list.filter(l=>l.status==="approved").length,"check","green")}${stat("Rejected",list.filter(l=>l.status==="rejected").length,"alert","red")}</div>
+    <div class="card">${table(["Trainee","Type","Dates","Days","Reason","Status","Decision"],rows)}</div></div>`;
+}
+function adminWarnings(){
+  const trainees=ownTrainees(),low=trainees.filter(t=>records(t.id).length&&pct(t.id)<75);
+  const warnings=db.warnings.filter(w=>trainees.some(t=>t.id===w.traineeId)).sort((a,b)=>b.createdAt-a.createdAt);
+  return `${pageHead("Attendance warnings","Send a custom notice to trainees who need attention.")}
+    <div class="stack"><div class="card card-pad"><div class="card-heading"><div><h3 class="card-title">Below 75% attendance</h3><p class="card-sub">Based on recorded and scheduled training days</p></div>${badge(low.length+" trainees",low.length?"red":"green")}</div>
+      ${low.length?low.map(t=>`<div class="list-item row"><div><div class="cell-main">${esc(t.name)} <span class="badge red">${pct(t.id)}%</span></div><div class="cell-sub">${esc(t.rollNo)}</div></div><button class="btn btn-outline btn-sm" onclick="openWarning('${esc(t.id)}')">Issue warning</button></div>`).join(""):empty("No trainees with recorded attendance are currently below 75%.")}
+    </div>
+    <div class="card"><div class="card-pad"><h3 class="card-title">Issued warnings</h3></div>${table(["Trainee","Message","Issued on"],warnings.map(w=>row([`<span class="cell-main">${esc(user(w.traineeId)?.name||"—")}</span>`,esc(w.message),esc(displayDate(localDate(w.createdAt)))])))}</div></div>`;
+}
+function adminTrade(){
+  const t=trade(me.tradeId);
+  return `${pageHead("My trade","Manage the trade assigned to your Training Officer account.")}
+    <div class="grid two-col">
+      <div class="card card-pad"><div class="card-heading"><div><h3 class="card-title">Trade details</h3><p class="card-sub">Changes to this trade appear for all its members.</p></div>${I("settings")}</div>
+        <form id="trade-form">${field("Trade name","name",t?.name||"","text",true,'maxlength="80"')}${field("Trade code","code",t?.code||"","text",true,'maxlength="12"')}
+          <div class="callout" style="margin-bottom:16px">Your access remains restricted to this trade. You cannot edit another trade's records.</div><button class="btn btn-primary" type="submit">Save trade details</button></form>
+      </div>
+      <div class="card card-pad"><h3 class="card-title">Trade summary</h3><div class="list-item row"><span>Trainee accounts</span><b>${ownTrainees().length}</b></div><div class="list-item row"><span>Training officers</span><b>${db.users.filter(u=>u.role==="admin"&&u.tradeId===me.tradeId).length}</b></div><div class="list-item row"><span>Attendance records</span><b>${ownAttendance().length}</b></div><div class="list-item row"><span>Leave applications</span><b>${ownLeaves().length}</b></div></div>
+    </div>`;
+}
+function adminReports(){
+  const reports=[["summary","Attendance summary","Attendance percentages and present, half-day and absent counts."],["daily","Daily attendance","A register for the date selected in Attendance."],["leaves","Leave applications","Applications and their approval status."],["trainees","Trainee list","Trade roster and contact information."],["low","Low attendance","Trainees currently below the 75% threshold."],["warnings","Warnings","Custom notices issued to trainees."]];
+  return `${pageHead("Download reports","Export records for your assigned trade as PDF or Excel.")}
+    <div class="stack"><div class="card card-pad"><div class="card-heading"><div><h3 class="card-title">Reporting period</h3><p class="card-sub">Applies to attendance summaries and leave applications.</p></div></div><div class="filters"><div class="field"><label for="report-from">From</label><input class="control" id="report-from" type="date" value="${esc(ui.reportFrom)}" onchange="ui.reportFrom=this.value"></div><div class="field"><label for="report-to">To</label><input class="control" id="report-to" type="date" value="${esc(ui.reportTo)}" onchange="ui.reportTo=this.value"></div></div></div>
+    <div class="grid two-even">${reports.map(([key,title,desc])=>`<div class="card card-pad"><div class="card-heading"><div class="stat-icon blue">${I("file")}</div></div><h3 class="card-title">${title}</h3><p class="card-sub" style="min-height:37px">${desc}</p><div class="action-group" style="margin-top:17px"><button class="btn btn-outline btn-sm" onclick="downloadReport('${key}','pdf')">${I("download")} PDF</button><button class="btn btn-outline btn-sm" onclick="downloadReport('${key}','excel')">${I("download")} Excel</button></div></div>`).join("")}</div></div>`;
+}
+
+/* Trainee views */
+function traineeDashboard(){
+  const recs=records(me.id),p=pct(me.id),marked=recs.find(r=>r.date===today()),pending=db.leaves.filter(l=>l.traineeId===me.id&&l.status==="pending").length,unread=notices(me.id).filter(n=>!n.read).length;
+  return `<div class="stack"><div class="hero"><div><span class="tag">${esc(trade(me.tradeId)?.name||"Trade")} · ${esc(me.rollNo)}</span><h2>Hello, ${esc(me.name.split(" ")[0])}</h2><p>${esc(displayDate(today()))} · ${marked?"Attendance marked today":"Ready for another training day?"}</p></div><button class="btn" onclick="go('${marked?"records":"mark"}')">${I(marked?"calendar":"check")} ${marked?"View records":"Mark attendance"}</button></div>
+    <div class="grid stats">${stat("Attendance",p+"%","chart")}${stat("Days present",recs.filter(r=>r.status==="present").length,"check","green")}${stat("Pending leaves",pending,"file","amber")}${stat("Unread alerts",unread,"bell","red")}</div>
+    <div class="grid two-col"><div class="card card-pad"><div class="card-heading"><div><h3 class="card-title">Attendance overview</h3><p class="card-sub">Your last 30 days</p></div><button class="btn btn-outline btn-sm" onclick="go('records')">Full history</button></div><div class="chart-wrap"><canvas id="trainee-trend"></canvas></div></div>
+      <div class="card card-pad"><h3 class="card-title">Leave balance</h3><p class="card-sub">Approved leave used this year</p>
+        ${["Casual","Medical"].map(type=>{const b=balance(me.id,type);return `<div class="leave-balance"><div class="row"><strong>${type} leave</strong><span class="hint">${b.left} of ${b.max} days left</span></div><div class="progress"><span style="width:${b.used/b.max*100}%"></span></div><div class="cell-sub">${b.used} days used</div></div>`}).join("")}
+        <div class="callout">Half-day leave is available for the current day only.</div><button class="btn btn-primary btn-full" style="margin-top:16px" onclick="go('apply')">${I("plus")} Apply for leave</button>
+      </div>
+    </div>
+    <div class="card card-pad"><div class="card-heading"><h3 class="card-title">Recent notifications</h3><button class="btn btn-outline btn-sm" onclick="go('alerts')">View all</button></div>${notices(me.id).slice(0,3).map(n=>`<div class="list-item row"><div><div class="cell-main">${esc(n.text)}</div><div class="cell-sub">${esc(displayDate(localDate(n.createdAt)))}</div></div>${n.read?"":badge("New","blue")}</div>`).join("")||empty("No notifications yet.")}</div>
+  </div>`;
+}
+function traineeMark(){
+  const marked=records(me.id).find(a=>a.date===today()),hour=new Date().getHours(),allowed=hour>=8&&hour<12;
+  return `${pageHead("Mark attendance","Record your arrival at the college for today.")}
+    <div class="grid two-col"><div class="card card-pad"><div class="card-heading"><div><h3 class="card-title">Today's attendance</h3><p class="card-sub">${esc(displayDate(today()))}</p></div>${marked?statusBadge(marked.status):badge("Not marked","gray")}</div>
+      ${marked?`<div class="callout"><strong>Attendance already recorded.</strong><br>Location: ${esc(marked.location)} · Time: ${esc(marked.time)}. Only one record is allowed per day.</div>`:`<form id="mark-form"><div class="field"><label>Select your location *</label><div class="choice-grid">${[["Classroom","Classroom"],["Workshop","Workshop"],["Lab","Lab"]].map(([v,l],i)=>`<label class="choice"><input type="radio" name="location" value="${v}" ${i===0?"required":""}><span class="choice-body">${l}</span></label>`).join("")}</div></div><button class="btn btn-primary btn-full" type="submit" ${allowed?"":"disabled"}>${I("check")} Mark present</button></form>${allowed?"":`<div class="notice" style="margin-top:13px">Attendance can be marked from 8:00 AM to 12:00 PM, using the college's local time.</div>`}`}
+    </div><div class="card card-pad"><h3 class="card-title">Before you mark</h3><div class="list-item">Select where you are reporting: Classroom, Workshop or Lab.</div><div class="list-item">Mark attendance once, upon arrival at the college.</div><div class="list-item">If you need time away, submit a leave application instead.</div><div class="list-item">Your attendance history and percentage update automatically.</div></div></div>`;
+}
+function traineeApply(){
+  return `${pageHead("Apply for leave","Submit a request to your Training Officer.")}
+    <div class="grid two-col"><div class="card card-pad">
+      <form id="leave-form">
+        <div class="field"><label>Leave type *</label><div class="choice-grid">${[["Casual","12 days/year"],["Medical","36 days/year"],["Half-Day","Today only"]].map(([name,hint],i)=>`<label class="choice"><input type="radio" name="type" value="${name}" ${i===0?"required":""} onchange="leaveTypeChanged(this.value)"><span class="choice-body">${name}<small>${hint}</small></span></label>`).join("")}</div></div>
+        <div class="form-grid">${field("From date","fromDate","","date",true)}<div id="leave-to">${field("To date","toDate","","date",true)}</div></div>
+        <div class="field"><label for="leave-reason">Reason *</label><textarea class="control" id="leave-reason" name="reason" maxlength="400" minlength="5" placeholder="Briefly explain your request" required></textarea></div>
+        <button class="btn btn-primary btn-full" type="submit">${I("arrow")} Submit application</button>
+      </form></div>
+      <div class="stack"><div class="card card-pad"><h3 class="card-title">Available leave</h3>${["Casual","Medical"].map(type=>{const b=balance(me.id,type);return `<div class="leave-balance"><div class="row"><strong>${type}</strong><span>${b.left} / ${b.max} days</span></div><div class="progress"><span style="width:${b.used/b.max*100}%"></span></div></div>`}).join("")}</div>
+      <div class="callout"><strong>Leave rules</strong><br>Casual leave: maximum 12 days. Medical leave: maximum 36 days. Half-day leave may be requested for today only. Requests are subject to officer approval. Overlapping requests are not permitted.</div></div>
+    </div>`;
+}
+function leaveTypeChanged(value){
+  const wrap=$("#leave-to"),to=wrap?.querySelector("input");
+  if(!wrap||!to)return;
+  wrap.classList.toggle("hidden",value==="Half-Day");to.required=value!=="Half-Day";
+  const from=$("#f-fromDate");if(value==="Half-Day"&&from)from.value=today();
+}
+function traineeLeaves(){
+  const list=db.leaves.filter(l=>l.traineeId===me.id).sort((a,b)=>b.appliedAt-a.appliedAt);
+  return `${pageHead("My leave history","Track every application and its current decision.",`<button class="btn btn-primary" onclick="go('apply')">${I("plus")} New application</button>`)}
+    <div class="grid stats">${stat("Applications",list.length,"file")}${stat("Pending",list.filter(l=>l.status==="pending").length,"clock","amber")}${stat("Approved",list.filter(l=>l.status==="approved").length,"check","green")}${stat("Rejected",list.filter(l=>l.status==="rejected").length,"alert","red")}</div>
+    <div class="card" style="margin-top:18px">${table(["Type","Dates","Days","Reason","Applied","Status"],list.map(l=>row([`<span class="cell-main">${esc(l.type)}</span>`,`${esc(displayDate(l.fromDate))}<div class="cell-sub">to ${esc(displayDate(l.toDate))}</div>`,esc(l.days),esc(l.reason),esc(displayDate(localDate(l.appliedAt))),statusBadge(l.status)])))}</div>`;
+}
+function traineeRecords(){
+  const recs=records(me.id).sort((a,b)=>b.date.localeCompare(a.date));
+  return `${pageHead("My attendance","Review daily records and your overall attendance percentage.",`<button class="btn btn-outline" onclick="downloadReport('mine','pdf')">${I("download")} Download PDF</button>`)}
+    <div class="stack"><div class="grid stats">${stat("Attendance",pct(me.id)+"%","chart")}${stat("Present",recs.filter(r=>r.status==="present").length,"check","green")}${stat("Half day",recs.filter(r=>r.status==="half-day").length,"clock","amber")}${stat("Recorded absent",recs.filter(r=>r.status==="absent").length,"alert","red")}</div>
+    <div class="card card-pad"><div class="card-heading"><h3 class="card-title">Monthly view</h3><input class="control" type="month" style="width:170px" aria-label="Select month" value="${esc(ui.month)}" onchange="ui.month=this.value;render()"></div><div class="chart-wrap short"><canvas id="trainee-month"></canvas></div></div>
+    <div class="card"><div class="card-pad"><h3 class="card-title">Complete recorded history</h3><p class="card-sub">Days without an attendance record are reflected in your percentage after the marking window closes.</p></div>${table(["Date","Day","Status","Location","Time"],recs.map(r=>row([`<span class="cell-main">${esc(displayDate(r.date))}</span>`,esc(dateObj(r.date).toLocaleDateString("en-IN",{weekday:"long"})),statusBadge(r.status),esc(r.location||"—"),esc(r.time||"—")])))}</div></div>`;
+}
+function traineeAlerts(){
+  const list=notices(me.id);
+  return `${pageHead("Notifications","Updates about leave decisions, attendance and warnings.",list.some(n=>!n.read)?`<button class="btn btn-outline" onclick="readAll()">Mark all as read</button>`:"")}
+    <div class="card card-pad">${list.length?list.map(n=>`<div class="list-item row"><div><div class="cell-main">${esc(n.text)}</div><div class="cell-sub">${esc(displayDate(localDate(n.createdAt)))}</div></div>${n.read?badge("Read","gray"):`<button class="btn btn-outline btn-sm" onclick="readNotice('${esc(n.id)}')">Mark read</button>`}</div>`).join(""):empty("You're all caught up. No notifications yet.")}</div>`;
+}
+
+/* Modals and actions */
+function modal(title,body,large=false){
+  $("#modal-root").innerHTML=`<div class="modal-backdrop" onclick="if(event.target===this)closeModal()"><div class="modal ${large?"large":""}" role="dialog" aria-modal="true" aria-label="${esc(title)}"><div class="modal-head"><h2>${esc(title)}</h2><button class="icon-btn" aria-label="Close" onclick="closeModal()">${I("close")}</button></div><div class="modal-body">${body}</div></div></div>`;
+}
+function closeModal(){ui.modal=null;$("#modal-root").innerHTML=""}
+function openTrainee(tid=""){
+  if(!isOfficer())return;
+  const t=tid?ownTrainees().find(u=>u.id===tid):null;if(tid&&!t)return;
+  ui.modal={type:"trainee",id:tid};
+  modal(t?"Edit trainee":"Add trainee",`<form id="trainee-form">
+    ${field("Full name","name",t?.name||"","text",true,'maxlength="80"')}
+    <div class="form-grid">${field("Roll number","rollNo",t?.rollNo||"","text",true,'maxlength="35"')}${field("Mobile number","mobile",t?.mobile||"","tel",false,'pattern="[0-9]{10}" title="Enter a 10-digit mobile number"')}</div>
+    ${field("Father's name","fatherName",t?.fatherName||"","text",false,'maxlength="80"')}
+    <div class="form-grid">${field("Username","username",t?.username||"","text",true,'minlength="3" maxlength="30"')}${field(t?"New password (optional)":"Password","password","","password",!t,'minlength="8" autocomplete="new-password"')}</div>
+    <p class="hint">Assigned trade: ${esc(trade(me.tradeId)?.name||"")}. ${t?"Leave password blank to keep the existing password.":"The trainee can sign in using these credentials."}</p>
+    <div class="modal-foot"><button type="button" class="btn btn-outline" onclick="closeModal()">Cancel</button><button type="submit" class="btn btn-primary">${t?"Save changes":"Create trainee"}</button></div>
+  </form>`);
+}
+async function saveTrainee(form){
+  if(!isOfficer()||ui.modal?.type!=="trainee")return;
+  const old=ui.modal.id?ownTrainees().find(u=>u.id===ui.modal.id):null;
+  if(ui.modal.id&&!old)return;
+  const f=new FormData(form),name=String(f.get("name")||"").trim(),rollNo=String(f.get("rollNo")||"").trim(),username=String(f.get("username")||"").trim().toLowerCase(),mobile=String(f.get("mobile")||"").trim(),password=String(f.get("password")||"");
+  if(name.length<2||!rollNo||!/^[a-z0-9._-]{3,30}$/.test(username)){flash("Check the trainee's name, roll number and username.",true);return}
+  if(db.users.some(u=>u.username===username&&u.id!==old?.id)||ownTrainees().some(u=>u.rollNo.toLowerCase()===rollNo.toLowerCase()&&u.id!==old?.id)){flash("Username or roll number already exists.",true);return}
+  if(mobile&&!/^\d{10}$/.test(mobile)){flash("Enter a valid 10-digit mobile number.",true);return}
+  if(password&&password.length<8){flash("Password must contain at least 8 characters.",true);return}
+  const values={name,rollNo,username,mobile,fatherName:String(f.get("fatherName")||"").trim()};
+  try{
+    if(password)Object.assign(values,await credentials(password));
+    if(old)Object.assign(old,values);
+    else{
+      if(!password){flash("A password is required for a new account.",true);return}
+      const account={id:id(),role:"trainee",tradeId:me.tradeId,active:true,joinedDate:today(),...values};
+      db.users.push(account);notify(account.id,"Your trainee account has been created.","blue");
+    }
+    save();closeModal();render();flash(old?"Trainee updated.":"Trainee created.");
+  }catch(e){flash(e.message,true)}
+}
+function toggleTrainee(tid){
+  const t=ownTrainees().find(u=>u.id===tid);if(!t)return;
+  if(!confirm((t.active?"Deactivate":"Activate")+" "+t.name+"?"))return;
+  t.active=!t.active;save();render();flash("Account status updated.");
+}
+function showTrainee(tid){
+  if(!isOfficer())return;
+  const t=ownTrainees().find(u=>u.id===tid);if(!t)return;
+  const recs=records(tid).sort((a,b)=>b.date.localeCompare(a.date)),leaves=db.leaves.filter(l=>l.traineeId===tid).sort((a,b)=>b.appliedAt-a.appliedAt);
+  modal(t.name,`<div class="grid stats" style="grid-template-columns:repeat(3,1fr)">${stat("Attendance",pct(tid)+"%","chart")}${stat("Records",recs.length,"calendar")}${stat("Leave requests",leaves.length,"file")}</div>
+    <p class="hint" style="margin:16px 0">${esc(t.rollNo)} · ${esc(t.mobile||"No mobile number")} · ${esc(t.active?"Active":"Inactive")}</p>
+    <h3 class="card-title" style="margin-bottom:9px">Recent attendance</h3>${table(["Date","Status","Location"],recs.slice(0,12).map(r=>row([esc(displayDate(r.date)),statusBadge(r.status),esc(r.location||"—")])))}
+    <h3 class="card-title" style="margin:18px 0 9px">Leave history</h3>${table(["Type","Dates","Status"],leaves.slice(0,10).map(l=>row([esc(l.type),esc(displayDate(l.fromDate))+" – "+esc(displayDate(l.toDate)),statusBadge(l.status)])))}`,true);
+}
+function reviewLeave(lid,decision){
+  if(!isOfficer()||!["approved","rejected"].includes(decision))return;
+  const l=ownLeaves().find(x=>x.id===lid&&x.status==="pending");if(!l)return;
+  if(!confirm((decision==="approved"?"Approve":"Reject")+" this leave request?"))return;
+  if(decision==="approved"&&["Casual","Medical"].includes(l.type)){
+    const b=balance(l.traineeId,l.type);
+    if(b.used+l.days>b.max){flash("Approval would exceed the trainee's leave allowance.",true);return}
+  }
+  l.status=decision;l.reviewedBy=me.id;l.reviewedAt=Date.now();
+  notify(l.traineeId,`Your ${l.type} leave (${displayDate(l.fromDate)} to ${displayDate(l.toDate)}) was ${decision}.`,decision==="approved"?"green":"red");
+  save();render();flash("Leave request "+decision+".");
+}
+function openWarning(tid){
+  if(!isOfficer()||!ownTrainees().some(t=>t.id===tid))return;
+  ui.modal={type:"warning",id:tid};
+  modal("Issue attendance warning",`<p class="subtle" style="margin-bottom:16px">To: <strong>${esc(user(tid).name)}</strong> · Current attendance: ${pct(tid)}%</p>
+    <form id="warning-form"><div class="field"><label for="warning-message">Message *</label><textarea class="control" id="warning-message" name="message" minlength="10" maxlength="500" required placeholder="Explain the concern and what the trainee should do next."></textarea></div>
+    <div class="modal-foot"><button type="button" class="btn btn-outline" onclick="closeModal()">Cancel</button><button type="submit" class="btn btn-primary">Send warning</button></div></form>`);
+}
+function readNotice(nid){const n=notices(me.id).find(x=>x.id===nid);if(n){n.read=true;save();render()}}
+function readAll(){notices(me.id).forEach(n=>n.read=true);save();render()}
+
+function submitMark(form){
+  if(isOfficer())return;
+  const hour=new Date().getHours(),location=new FormData(form).get("location");
+  if(hour<8||hour>=12){flash("Attendance is open from 8:00 AM to 12:00 PM.",true);return}
+  if(!["Classroom","Workshop","Lab"].includes(location)){flash("Select a valid location.",true);return}
+  if(records(me.id).some(a=>a.date===today())){flash("Attendance is already marked for today.",true);return}
+  db.attendance.push({id:id(),traineeId:me.id,date:today(),status:"present",location,time:new Date().toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit",hour12:false}),createdAt:Date.now()});
+  notify(me.id,"Attendance marked successfully for "+displayDate(today())+".","green");
+  save();go("dashboard");flash("Attendance marked successfully.");
+}
+function submitLeave(form){
+  if(isOfficer())return;
+  const f=new FormData(form),type=String(f.get("type")||""),from=String(f.get("fromDate")||""),to=type==="Half-Day"?from:String(f.get("toDate")||""),reason=String(f.get("reason")||"").trim();
+  if(!["Casual","Medical","Half-Day"].includes(type)||!from||!to||!reason||reason.length<5){flash("Complete all leave fields and provide a reason.",true);return}
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(from)||!dateObj(from).getTime()||!/^\d{4}-\d{2}-\d{2}$/.test(to)||!dateObj(to).getTime()||to<from){flash("Check the leave dates.",true);return}
+  if(type==="Half-Day"&&from!==today()){flash("Half-day leave can only be requested for today.",true);return}
+  const days=type==="Half-Day"?.5:Math.round((dateObj(to)-dateObj(from))/86400000)+1;
+  if(days<=0||days>366){flash("Choose a valid leave period of up to 366 days.",true);return}
+  if(type!=="Half-Day"&&balance(me.id,type,true).left<days){flash("This request exceeds your available "+type.toLowerCase()+" leave.",true);return}
+  if(db.leaves.some(l=>l.traineeId===me.id&&l.status!=="rejected"&&from<=l.toDate&&to>=l.fromDate)){flash("These dates overlap an existing leave request.",true);return}
+  db.leaves.push({id:id(),traineeId:me.id,type,fromDate:from,toDate:to,days,reason,status:"pending",appliedAt:Date.now(),reviewedBy:null});
+  db.users.filter(u=>u.role==="admin"&&u.tradeId===me.tradeId&&u.active).forEach(off=>notify(off.id,`${me.name} submitted a ${type} leave request.`));
+  save();go("leaves");flash("Leave application submitted.");
+}
+function saveTrade(form){
+  if(!isOfficer())return;
+  const t=trade(me.tradeId);if(!t)return;
+  const f=new FormData(form),name=String(f.get("name")||"").trim(),code=String(f.get("code")||"").trim().toUpperCase();
+  if(name.length<2||code.length<2||!/^[A-Z0-9-]{2,12}$/.test(code)){flash("Enter a trade name and a 2–12 character alphanumeric code.",true);return}
+  if(db.trades.some(other=>other.id!==t.id&&(other.name.toLowerCase()===name.toLowerCase()||other.code===code))){flash("Another trade already uses that name or code.",true);return}
+  t.name=name;t.code=code;save();render();flash("Trade details updated.");
+}
+function saveWarning(form){
+  if(!isOfficer()||ui.modal?.type!=="warning")return;
+  const tid=ui.modal.id;if(!ownTrainees().some(t=>t.id===tid))return;
+  const message=String(new FormData(form).get("message")||"").trim();
+  if(message.length<10){flash("Please write a message of at least 10 characters.",true);return}
+  db.warnings.push({id:id(),traineeId:tid,message,issuedBy:me.id,createdAt:Date.now()});
+  notify(tid,"Attendance warning: "+message,"red");
+  save();closeModal();render();flash("Warning sent to trainee.");
+}
+
+/* Charts */
+function clearCharts(){charts.forEach(c=>c.destroy());charts=[]}
+function makeChart(target,config){const el=$("#"+target);if(el&&window.Chart)charts.push(new Chart(el,config))}
+function chartOptions(max=null){return {responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:"#18385f",padding:10}},scales:{x:{grid:{display:false},ticks:{color:"#8290a3",maxTicksLimit:12}},y:{beginAtZero:true,suggestedMax:max||undefined,ticks:{precision:0,color:"#8290a3"},grid:{color:"#eef2f7"}}}}}
+function drawCharts(){
+  if(isOfficer()&&ui.section==="dashboard"){
+    const labels=[],values=[];for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const ds=localDate(d);labels.push(d.toLocaleDateString("en-IN",{weekday:"short"}));values.push(ownAttendance().filter(a=>a.date===ds&&a.status==="present").length)}
+    makeChart("admin-trend",{type:"line",data:{labels,datasets:[{data:values,borderColor:"#1754b8",backgroundColor:"#1754b81a",fill:true,tension:.3,pointRadius:4,pointBackgroundColor:"#1754b8"}]},options:chartOptions(ownTrainees().length)});
+  }
+  if(isOfficer()&&ui.section==="attendance"){
+    const count=new Date(Number(ui.month.slice(0,4)),Number(ui.month.slice(5)),0).getDate(),labels=[],values=[];
+    for(let d=1;d<=count;d++){const ds=ui.month+"-"+String(d).padStart(2,"0");labels.push(String(d));values.push(ownAttendance().filter(a=>a.date===ds&&a.status==="present").length)}
+    makeChart("admin-month",{type:"bar",data:{labels,datasets:[{data:values,backgroundColor:"#4c83d5",borderRadius:4,maxBarThickness:19}]},options:chartOptions(ownTrainees().length)});
+  }
+  if(!isOfficer()&&ui.section==="dashboard"){
+    const labels=[],values=[];for(let i=29;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const ds=localDate(d),r=records(me.id).find(a=>a.date===ds);labels.push(String(d.getDate()));values.push(r?.status==="present"?1:r?.status==="half-day"?.5:0)}
+    makeChart("trainee-trend",{type:"bar",data:{labels,datasets:[{data:values,backgroundColor:values.map(v=>v===1?"#3284cc":v===.5?"#e6aa50":"#dce6f2"),borderRadius:3,maxBarThickness:17}]},options:{...chartOptions(1),scales:{x:{grid:{display:false},ticks:{color:"#8290a3",maxTicksLimit:10}},y:{beginAtZero:true,max:1,ticks:{stepSize:.5,color:"#8290a3"},grid:{color:"#eef2f7"}}}}});
+  }
+  if(!isOfficer()&&ui.section==="records"){
+    const count=new Date(Number(ui.month.slice(0,4)),Number(ui.month.slice(5)),0).getDate(),labels=[],values=[];
+    for(let d=1;d<=count;d++){const ds=ui.month+"-"+String(d).padStart(2,"0"),r=records(me.id).find(a=>a.date===ds);labels.push(String(d));values.push(r?.status==="present"?1:r?.status==="half-day"?.5:0)}
+    makeChart("trainee-month",{type:"bar",data:{labels,datasets:[{data:values,backgroundColor:"#4c83d5",borderRadius:3,maxBarThickness:18}]},options:{...chartOptions(1),scales:{x:{grid:{display:false},ticks:{maxTicksLimit:12,color:"#8290a3"}},y:{beginAtZero:true,max:1,ticks:{stepSize:.5,color:"#8290a3"},grid:{color:"#eef2f7"}}}}});
+  }
+}
+
+/* Reports: all officer reports are scoped to the signed-in officer's trade. */
+function downloadReport(kind,format){
+  if(!me)return;
+  if(!["pdf","excel"].includes(format))return;
+  if(!isOfficer()&&kind!=="mine")return;
+  if(isOfficer()&&kind==="mine")return;
+  if(ui.reportFrom>ui.reportTo){flash("The reporting start date must be before the end date.",true);return}
+  let title="",headers=[],rows=[];
+  const trainees=isOfficer()?ownTrainees():[],period=`${ui.reportFrom} to ${ui.reportTo}`;
+  if(kind==="summary"){
+    title="Attendance Summary · "+period;headers=["Roll No","Name","Present","Half Day","Absent","Attendance %"];
+    rows=trainees.map(t=>{const r=records(t.id).filter(a=>a.date>=ui.reportFrom&&a.date<=ui.reportTo),present=r.filter(a=>a.status==="present").length,half=r.filter(a=>a.status==="half-day").length,absent=r.filter(a=>a.status==="absent").length;return [t.rollNo,t.name,present,half,absent,pct(t.id)+"%"]});
+  }else if(kind==="daily"){
+    title="Daily Attendance · "+ui.date;headers=["Roll No","Name","Date","Status","Location","Time"];
+    rows=trainees.map(t=>{const a=records(t.id).find(r=>r.date===ui.date);return [t.rollNo,t.name,ui.date,a?.status||"Not marked",a?.location||"—",a?.time||"—"]});
+  }else if(kind==="leaves"){
+    title="Leave Applications · "+period;headers=["Trainee","Roll No","Type","From","To","Days","Reason","Status"];
+    rows=ownLeaves().filter(l=>localDate(l.appliedAt)>=ui.reportFrom&&localDate(l.appliedAt)<=ui.reportTo).map(l=>[user(l.traineeId)?.name||"",user(l.traineeId)?.rollNo||"",l.type,l.fromDate,l.toDate,l.days,l.reason,l.status]);
+  }else if(kind==="trainees"){
+    title="Trainee List";headers=["Roll No","Name","Mobile","Attendance %","Status"];
+    rows=trainees.map(t=>[t.rollNo,t.name,t.mobile||"",pct(t.id)+"%",t.active?"Active":"Inactive"]);
+  }else if(kind==="low"){
+    title="Low Attendance";headers=["Roll No","Name","Attendance %","Records"];
+    rows=trainees.filter(t=>records(t.id).length&&pct(t.id)<75).map(t=>[t.rollNo,t.name,pct(t.id)+"%",records(t.id).length]);
+  }else if(kind==="warnings"){
+    title="Issued Warnings";headers=["Trainee","Roll No","Message","Date"];
+    rows=db.warnings.filter(w=>trainees.some(t=>t.id===w.traineeId)).map(w=>[user(w.traineeId)?.name||"",user(w.traineeId)?.rollNo||"",w.message,localDate(w.createdAt)]);
+  }else if(kind==="mine"){
+    title="My Attendance";headers=["Date","Status","Location","Time"];
+    rows=records(me.id).sort((a,b)=>b.date.localeCompare(a.date)).map(r=>[r.date,r.status,r.location||"",r.time||""]);
+  }else return;
+  try{
+    const filename="iti_raigarh_"+kind+"_"+today();
+    if(format==="pdf"){
+      if(!window.jspdf?.jsPDF)throw Error("PDF library is unavailable. Please try again.");
+      const doc=new window.jspdf.jsPDF({orientation:headers.length>6?"landscape":"portrait"});
+      doc.setFontSize(15);doc.setTextColor(18,59,131);doc.text("Government ITI Raigarh",14,17);
+      doc.setFontSize(10);doc.setTextColor(72,88,110);
+      doc.text(title,14,24);doc.text((isOfficer()?"Trade: "+trade(me.tradeId)?.name:"Trainee: "+me.name+" · "+me.rollNo),14,30);
+      doc.autoTable({startY:36,head:[headers],body:rows.length?rows:[["No records available",...headers.slice(1).map(()=>"")]],theme:"striped",styles:{fontSize:8,cellPadding:3},headStyles:{fillColor:[23,84,184]}});
+      doc.save(filename+".pdf");
+    }else{
+      if(!window.XLSX)throw Error("Excel library is unavailable. Please try again.");
+      const sheet=XLSX.utils.aoa_to_sheet([headers,...(rows.length?rows:[["No records available"]])]);
+      sheet["!cols"]=headers.map((h,i)=>({wch:Math.min(55,Math.max(17,h.length+3,...rows.map(r=>String(r[i]??"").length+2)))}));
+      const book=XLSX.utils.book_new();XLSX.utils.book_append_sheet(book,sheet,"Report");XLSX.writeFile(book,filename+".xlsx");
+    }
+    flash("Report downloaded.");
+  }catch(e){flash(e.message,true)}
+}
+
+function render(){
+  clearCharts();
+  if(!me||!me.active){if(me&&!me.active)logout();else $("#app").innerHTML=authView();return}
+  const views=isOfficer()?{dashboard:adminDashboard,attendance:adminAttendance,trainees:adminTrainees,leaves:adminLeaves,warnings:adminWarnings,reports:adminReports,trade:adminTrade}:{dashboard:traineeDashboard,mark:traineeMark,apply:traineeApply,leaves:traineeLeaves,records:traineeRecords,alerts:traineeAlerts};
+  if(!views[ui.section])ui.section="dashboard";
+  $("#app").innerHTML=shell(views[ui.section]());
+  drawCharts();
+}
+
+document.addEventListener("change",e=>{
+  if(e.target?.name==="role"&&e.target.closest("#signup-form")){
+    const f=e.target.closest("form"),values=Object.fromEntries(new FormData(f));
+    ui.role=e.target.value;render();
+    const newForm=$("#signup-form");
+    ["name","tradeId","username","mobile","password","confirm","rollNo"].forEach(k=>{if(newForm?.elements[k]&&values[k])newForm.elements[k].value=values[k]});
+  }
+});
+document.addEventListener("submit",async e=>{
+  const form=e.target;if(!form.id)return;
+  e.preventDefault();
+  const button=form.querySelector('button[type="submit"]');if(button?.disabled)return;
+  if(button)button.disabled=true;
+  try{
+    if(form.id==="login-form")await handleLogin(form);
+    else if(form.id==="signup-form")await handleSignup(form);
+    else if(form.id==="trainee-form")await saveTrainee(form);
+    else if(form.id==="mark-form")submitMark(form);
+    else if(form.id==="leave-form")submitLeave(form);
+    else if(form.id==="trade-form")saveTrade(form);
+    else if(form.id==="warning-form")saveWarning(form);
+  }catch(err){flash(err.message||"Something went wrong. Please try again.",true)}
+  finally{if(button?.isConnected)button.disabled=false}
+});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("#modal-root").innerHTML)closeModal()});
+
+(async function boot(){
+  $("#app").innerHTML='<div style="min-height:100vh;display:grid;place-items:center;color:#1754b8;font-weight:700">Loading ITI Raigarh Attendance…</div>';
+  try{
+    await seed();
+    const saved=sessionStorage.getItem(SESSION);
+    if(saved){const account=user(saved);if(account?.active)me=account;else sessionStorage.removeItem(SESSION)}
+    render();
+  }catch(err){
+    $("#app").innerHTML=`<div style="max-width:480px;margin:12vh auto;padding:24px;background:white;border:1px solid #e4ebf4;border-radius:12px"><h1>Unable to start the portal</h1><p>${esc(err.message)}</p><p>Please enable browser storage and use HTTPS or localhost.</p></div>`;
+  }
+})();
+</script>
+</body>
+</html>
